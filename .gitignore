@@ -1,0 +1,23 @@
+# Compiled binaries
+/hooklet
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/
+
+# SQLite runtime database files
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+
+# Test artifacts
+test.db
+
+# OS / Editor junk
+.DS_Store
+*.swp
+.vscode/
+.idea/

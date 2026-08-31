@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⚡ Hooklet | Webhook Capture & Replay</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: { 500: '#6366f1', 600: '#4f46e5' },
+            dark: { 800: '#1e293b', 900: '#0f172a', 950: '#020617' }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-dark-950 text-slate-200 min-h-screen flex flex-col font-sans antialiased">
+
+  <!-- TOP HEADER -->
+  <header class="bg-dark-900 border-b border-slate-800 px-6 py-3.5 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <span class="text-2xl">⚡</span>
+      <div>
+        <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+          Hooklet
+          <span class="text-xs bg-indigo-950 text-indigo-400 border border-indigo-800 px-2 py-0.5 rounded-full font-mono">v0.1</span>
+        </h1>
+        <p class="text-xs text-slate-400">Webhook Capture & Replay Engine</p>
+      </div>
+    </div>
+
+    <!-- Live indicator and target configuration -->
+    <div class="flex items-center gap-4 text-xs">
+      <div class="flex items-center gap-2 px-3 py-1.5 rounded-md bg-dark-800 border border-slate-800">
+        <span class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+        </span>
+        <span class="text-slate-300 font-mono" id="sse-status">Live Connected</span>
+      </div>
+
+      <div class="flex items-center gap-2 bg-dark-800 border border-slate-800 px-3 py-1.5 rounded-md">
+        <span class="text-slate-400">Default Target:</span>
+        <span class="text-indigo-300 font-mono font-medium" id="default-target">http://localhost:8000</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN SPLIT WORKSPACE -->
+  <div class="flex-1 flex overflow-hidden">
+
+    <!-- LEFT SIDEBAR: CAPTURED REQUESTS -->
+    <div class="w-96 border-r border-slate-800 bg-dark-900 flex flex-col">
+      <div class="p-3 border-b border-slate-800 flex items-center justify-between text-xs text-slate-400">
+        <span class="font-semibold uppercase tracking-wider">Captured Webhooks (<span id="count">0</span>)</span>
+        <span class="text-[11px] text-slate-500">Listening on <code class="text-indigo-400">/wh/*</code></span>
+      </div>
+
+      <div id="request-list" class="flex-1 overflow-y-auto divide-y divide-slate-800/60">
+        <!-- Webhook items populated by JS -->
+      </div>
+    </div>
+
+    <!-- RIGHT MAIN PANEL: INSPECTOR & REPLAY -->
+    <div class="flex-1 flex flex-col bg-dark-950 overflow-y-auto" id="detail-panel">
+      <div class="m-auto text-center text-slate-500 py-24">
+        <p class="text-4xl mb-3">📡</p>
+        <p class="text-sm font-medium">Waiting for webhooks...</p>
+        <p class="text-xs text-slate-600 mt-1">Send a POST request to <code class="text-indigo-400 font-mono">http://localhost:8080/wh/test</code></p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- JAVASCRIPT: SSE STREAMING & REPLAY DISPATCH -->
+  <script>
+    let requests = [];
+    let selectedID = null;
+
+    // 1. Fetch initial request list
+    async function loadRequests() {
+      try {
+        const res = await fetch('/api/requests');
+        if (res.ok) {
+          requests = await res.json() || [];
+          renderList();
+          if (requests.length > 0 && !selectedID) {
+            selectRequest(requests[0].id);
+          }
+        }
+      } catch (err) {
+        console.error('Failed loading requests:', err);
+      }
+    }
+
+    // 2. Connect to Server-Sent Events for real-time updates!
+    function connectSSE() {
+      const source = new EventSource('/api/events');
+
+      source.onmessage = (event) => {
+        const req = JSON.parse(event.data);
+        requests.unshift(req);
+        renderList();
+        if (!selectedID) {
+          selectRequest(req.id);
+        }
+      };
+
+      source.onerror = () => {
+        document.getElementById('sse-status').innerText = 'Reconnecting...';
+      };
+
+      source.onopen = () => {
+        document.getElementById('sse-status').innerText = 'Live Connected';
+      };
+    }
+
+    function renderList() {
+      const listEl = document.getElementById('request-list');
+      document.getElementById('count').innerText = requests.length;
+
+      if (requests.length === 0) {
+        listEl.innerHTML = '<div class="p-6 text-center text-xs text-slate-500">No webhooks captured yet</div>';
+        return;
+      }
+
+      listEl.innerHTML = requests.map(req => {
+        const isSelected = req.id === selectedID;
+        const time = new Date(req.created_at).toLocaleTimeString();
+        return `
+          <div onclick="selectRequest('${req.id}')" 
+               class="p-3.5 cursor-pointer transition flex flex-col gap-1.5 ${isSelected ? 'bg-indigo-950/40 border-l-2 border-indigo-500' : 'hover:bg-slate-800/40'}">
+            <div class="flex items-center justify-between">
+              <span class="px-2 py-0.5 text-[10px] font-bold font-mono rounded bg-emerald-950 text-emerald-400 border border-emerald-800">${req.method}</span>
+              <span class="text-[11px] font-mono text-slate-500">${time}</span>
+            </div>
+            <div class="text-xs font-mono text-slate-200 truncate">${req.path}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function selectRequest(id) {
+      selectedID = id;
+      renderList();
+      const res = await fetch('/api/requests/' + id);
+      if (!res.ok) return;
+      const req = await res.json();
+      renderDetail(req);
+    }
+
+    function renderDetail(req) {
+      const panel = document.getElementById('detail-panel');
+      let bodyFormatted = req.body ? atob(req.body) : '';
+      try {
+        bodyFormatted = JSON.stringify(JSON.parse(bodyFormatted), null, 2);
+      } catch (e) {}
+
+      const headersHtml = Object.entries(req.headers || {}).map(([k, v]) => `
+        <tr class="border-b border-slate-800/60 font-mono text-xs">
+          <td class="py-2 text-indigo-400 font-medium">${k}</td>
+          <td class="py-2 text-slate-300 break-all">${v.join(', ')}</td>
+        </tr>
+      `).join('');
+
+      const replaysHtml = (req.replay_attempts || []).map(att => {
+        const is2xx = att.status_code >= 200 && att.status_code < 300;
+        return `
+          <div class="p-2.5 rounded bg-dark-900 border border-slate-800 flex items-center justify-between text-xs font-mono mb-2">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded font-bold ${is2xx ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-rose-950 text-rose-400 border border-rose-800'}">
+                ${att.status_code || 'ERR'}
+              </span>
+              <span class="text-slate-300">${att.target_url}</span>
+              ${att.error ? `<span class="text-rose-400 text-[11px] truncate max-w-xs">(${att.error})</span>` : ''}
+            </div>
+            <span class="text-slate-500">${att.latency_ms}ms</span>
+          </div>
+        `;
+      }).join('');
+
+      panel.innerHTML = `
+        <div class="p-6 border-b border-slate-800 flex items-center justify-between bg-dark-900/60">
+          <div>
+            <div class="flex items-center gap-3">
+              <span class="px-2.5 py-1 text-xs font-bold font-mono rounded bg-emerald-950 text-emerald-400 border border-emerald-800">${req.method}</span>
+              <h2 class="text-base font-mono font-semibold text-white">${req.path}</h2>
+            </div>
+            <p class="text-xs text-slate-400 font-mono mt-1">ID: ${req.id} • ${new Date(req.created_at).toLocaleString()}</p>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <input type="text" id="custom-target" value="http://localhost:8000" class="bg-dark-950 border border-slate-800 px-3 py-1.5 text-xs font-mono text-slate-200 rounded focus:border-indigo-500 focus:outline-none w-56" />
+            <button onclick="triggerReplay('${req.id}')" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs rounded transition flex items-center gap-1.5 shadow">
+              <span>🔁</span> Replay
+            </button>
+          </div>
+        </div>
+
+        <div class="p-6 space-y-6">
+          <!-- HEADERS -->
+          <div>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Request Headers</h3>
+            <div class="bg-dark-900 rounded-lg border border-slate-800 overflow-hidden px-4">
+              <table class="w-full text-left">
+                <tbody>${headersHtml}</tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- PAYLOAD -->
+          <div>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Payload (Raw Bytes Preserved)</h3>
+            <pre class="bg-dark-900 border border-slate-800 rounded-lg p-4 font-mono text-xs text-indigo-300 overflow-x-auto">${bodyFormatted}</pre>
+          </div>
+
+          <!-- REPLAY ATTEMPTS -->
+          <div>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Replay History</h3>
+            <div id="replay-history">
+              ${replaysHtml || '<div class="text-xs text-slate-500 italic">No replays triggered yet.</div>'}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    async function triggerReplay(id) {
+      const btn = event.currentTarget;
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<span>⏳</span> Replaying...';
+      const target = document.getElementById('custom-target').value;
+      try {
+        await fetch('/api/requests/' + id + '/replay?target=' + encodeURIComponent(target), { method: 'POST' });
+      } catch (err) {
+        console.error('Replay error:', err);
+      } finally {
+        await selectRequest(id);
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    }
+
+    loadRequests();
+    connectSSE();
+  </script>
+</body>
+</html>
