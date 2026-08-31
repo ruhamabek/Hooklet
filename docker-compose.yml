@@ -1,0 +1,15 @@
+services:
+  hooklet:
+    build: .
+    container_name: hooklet
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - HOOKLET_DB=/data/hooklet.db
+      - HOOKLET_TARGET=http://host.docker.internal:8000
+    volumes:
+      - ./data:/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

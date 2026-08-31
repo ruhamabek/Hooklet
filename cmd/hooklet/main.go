@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
+	"strconv"
 	"syscall"
 
 	"hooklet/internal/event"
@@ -15,13 +17,37 @@ import (
 	"hooklet/internal/store"
 )
 
+func getEnv(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
+}
+
+func getEnvInt(key string, fallback int) int {
+	if v := os.Getenv(key); v != "" {
+		if n, err := strconv.Atoi(v); err == nil {
+			return n
+		}
+	}
+	return fallback
+}
+
 func main() {
- 	port := flag.Int("port", 8080, "Port to listen on")
-	target := flag.String("target", "http://localhost:8000", "Default target server for webhook replays")
-	dbPath := flag.String("db", "hooklet.db", "Path to SQLite database file")
+	defaultPort := getEnvInt("PORT", 8080)
+	defaultTarget := getEnv("HOOKLET_TARGET", getEnv("TARGET", "http://localhost:8000"))
+	defaultDB := getEnv("HOOKLET_DB", getEnv("DB_PATH", "hooklet.db"))
+
+	port := flag.Int("port", defaultPort, "Port to listen on (env: PORT)")
+	target := flag.String("target", defaultTarget, "Default target server for webhook replays (env: HOOKLET_TARGET)")
+	dbPath := flag.String("db", defaultDB, "Path to SQLite database file (env: HOOKLET_DB)")
 	flag.Parse()
 
- 	db, err := store.NewSqliteStore(*dbPath)
+	if dir := filepath.Dir(*dbPath); dir != "." && dir != "" {
+		_ = os.MkdirAll(dir, 0755)
+	}
+
+	db, err := store.NewSqliteStore(*dbPath)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to open database at %s: %v", *dbPath, err)
 	}

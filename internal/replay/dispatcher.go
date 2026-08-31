@@ -8,7 +8,9 @@ import (
 	"hooklet/internal/model"
 	"hooklet/internal/store"
 	"io"
+	"net"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -32,10 +34,31 @@ func NewDispatcher(s store.Store, client HTTPClient)*Dispatcher{
 	}
 }
 
+func resolveTargetURL(targetURL string) string {
+	u, err := url.Parse(targetURL)
+	if err != nil {
+		return targetURL
+	}
+	hostname := u.Hostname()
+	if hostname == "localhost" || hostname == "127.0.0.1" {
+		if _, err := net.LookupHost("host.docker.internal"); err == nil {
+			port := u.Port()
+			if port != "" {
+				u.Host = "host.docker.internal:" + port
+			} else {
+				u.Host = "host.docker.internal"
+			}
+			return u.String()
+		}
+	}
+	return targetURL
+}
+
 func (d *Dispatcher) Replay(ctx context.Context, req *model.WebhookRequest, targetURL string)(*model.ReplayAttempt, error){
       start := time.Now()
 
-	  httpReq, err := http.NewRequestWithContext(ctx, req.Method, targetURL, bytes.NewReader(req.Body))
+	  resolvedURL := resolveTargetURL(targetURL)
+	  httpReq, err := http.NewRequestWithContext(ctx, req.Method, resolvedURL, bytes.NewReader(req.Body))
 
 	  if err != nil {
 		return nil, fmt.Errorf("create replay request: %v", err)

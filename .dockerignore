@@ -1,0 +1,9 @@
+.git
+.github
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+hooklet
+node_modules
+.DS_Store
