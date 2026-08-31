@@ -1,0 +1,31 @@
+ ::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #000000; }
+::-webkit-scrollbar-thumb { background: #1c1c1c; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #2c2c2c; }
+
+ pre[class*="language-"], code[class*="language-"] {
+  background: #000000 !important;
+  text-shadow: none !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+}
+
+.badge-post { 
+  background-color: rgba(16, 185, 129, 0.12); 
+  color: #34d399; 
+  border: 1px solid rgba(16, 185, 129, 0.25); 
+}
+.badge-get { 
+  background-color: rgba(59, 130, 246, 0.12); 
+  color: #60a5fa; 
+  border: 1px solid rgba(59, 130, 246, 0.25); 
+}
+.badge-put { 
+  background-color: rgba(245, 158, 11, 0.12); 
+  color: #fbbf24; 
+  border: 1px solid rgba(245, 158, 11, 0.25); 
+}
+.badge-delete { 
+  background-color: rgba(244, 63, 94, 0.12); 
+  color: #fb7185; 
+  border: 1px solid rgba(244, 63, 94, 0.25); 
+}

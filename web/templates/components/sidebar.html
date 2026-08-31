@@ -1,0 +1,36 @@
+{{ define "sidebar" }}
+<div class="w-[380px] border-r border-canvas-800 bg-canvas-900 flex flex-col flex-shrink-0">
+  <div class="p-3 border-b border-canvas-800 flex items-center justify-between text-xs">
+    <div class="flex items-center gap-2">
+      <span class="font-bold uppercase tracking-wider text-slate-300 text-[11px]">CAPTURED WEBHOOKS</span>
+      <span id="webhook-count-pill" class="px-1.5 py-0.5 rounded-full bg-canvas-800 border border-canvas-750 text-slate-300 text-[10px] font-mono">0</span>
+    </div>
+    <div class="flex items-center gap-1 text-[11px] text-slate-400">
+      <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+      <span>Listening <code class="text-blue-400 font-mono">/wh/*</code></span>
+    </div>
+  </div>
+
+  <div class="p-2.5 border-b border-canvas-800/80">
+    <div class="relative">
+      <i data-lucide="search" class="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5"></i>
+      <input type="text" id="search-filter" oninput="applyFilters()" placeholder="Filter requests..." 
+             class="w-full bg-canvas-950 border border-canvas-800 rounded-md pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 font-mono" />
+    </div>
+  </div>
+
+  <div class="px-2.5 py-2 border-b border-canvas-800/80 flex items-center gap-1.5 text-[11px] overflow-x-auto">
+    <button onclick="setMethodFilter('ALL')" id="filter-all" class="px-2 py-0.5 rounded bg-blue-600 text-white font-medium">ALL</button>
+    <button onclick="setMethodFilter('POST')" id="filter-post" class="px-2 py-0.5 rounded bg-canvas-800 text-slate-400 hover:text-slate-200">POST</button>
+    <button onclick="setMethodFilter('GET')" id="filter-get" class="px-2 py-0.5 rounded bg-canvas-800 text-slate-400 hover:text-slate-200">GET</button>
+    <button onclick="setMethodFilter('PUT')" id="filter-put" class="px-2 py-0.5 rounded bg-canvas-800 text-slate-400 hover:text-slate-200">PUT</button>
+    <span class="text-canvas-750">|</span>
+    <button onclick="setSourceFilter('all')" id="source-all" class="px-2 py-0.5 rounded bg-blue-600 text-white font-medium">All Sources</button>
+    <button onclick="setSourceFilter('github')" id="source-github" class="px-2 py-0.5 rounded bg-canvas-800 text-slate-400 hover:text-slate-200">GitHub</button>
+    <button onclick="setSourceFilter('stripe')" id="source-stripe" class="px-2 py-0.5 rounded bg-canvas-800 text-slate-400 hover:text-slate-200">Stripe</button>
+    <button onclick="setSourceFilter('shopify')" id="source-shopify" class="px-2 py-0.5 rounded bg-canvas-800 text-slate-400 hover:text-slate-200">Shopify</button>
+  </div>
+
+  <div id="request-list" class="flex-1 overflow-y-auto divide-y divide-canvas-800/60"></div>
+</div>
+{{ end }}

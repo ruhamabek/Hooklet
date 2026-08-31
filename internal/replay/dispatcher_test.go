@@ -31,6 +31,13 @@ func (s *SpyReplayStore) SaveReplayAttempt(ctx context.Context, attempt *model.R
 func (s *SpyReplayStore) GetReplayAttempts(ctx context.Context, requestID string) ([]model.ReplayAttempt, error) {
 	return nil, nil
 }
+func (s *SpyReplayStore) DeleteRequest(ctx context.Context, id string) error {
+	return nil
+}
+func (s *SpyReplayStore) ClearRequests(ctx context.Context) error {
+	s.savedAttempts = nil
+	return nil
+}
 
 func TestDispatcher_RelaySuccess(t *testing.T){
 	var receivedHeaders http.Header

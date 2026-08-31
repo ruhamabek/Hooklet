@@ -26,7 +26,7 @@ func (b *Broker) Subscribe() chan *model.WebhookRequest {
 	  return ch
 }
 
-func (b *Broker) Unsusbcribe(ch chan *model.WebhookRequest){
+func (b *Broker) Unsubscribe(ch chan *model.WebhookRequest){
 	b.mu.Lock()
 	defer b.mu.Unlock()
 

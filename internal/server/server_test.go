@@ -62,6 +62,18 @@ func(f *FakeServerStore) GetReplayAttempts(ctx context.Context, requestID string
 	return f.replays[requestID], nil
 }
 
+func(f *FakeServerStore) DeleteRequest(ctx context.Context, id string) error {
+	delete(f.requests, id)
+	delete(f.replays, id)
+	return nil
+}
+
+func(f *FakeServerStore) ClearRequests(ctx context.Context) error {
+	f.requests = make(map[string]*model.WebhookRequest)
+	f.replays = make(map[string][]model.ReplayAttempt)
+	return nil
+}
+
 func TestServer_ListRequestsAPI(t *testing.T) {
 	store := newFakeStore()
 	broker := event.NewBroker()
@@ -117,5 +129,33 @@ func TestServer_ReplayAPI(t *testing.T) {
 	}
 	if attempt.StatusCode != http.StatusOK {
 		t.Errorf("expected attempt status 200, got %d", attempt.StatusCode)
+	}
+}
+
+func TestServer_DeleteRequestAPI(t *testing.T) {
+	store := newFakeStore()
+	broker := event.NewBroker()
+	dispatcher := replay.NewDispatcher(store, http.DefaultClient)
+	orig := &model.WebhookRequest{
+		ID:        "req-to-delete",
+		Method:    "POST",
+		Path:      "/wh/github",
+		Body:      []byte(`{"action":"delete_me"}`),
+		CreatedAt: time.Now().UTC(),
+	}
+	_ = store.SaveRequest(context.Background(), orig)
+	srv := server.New(store, broker, dispatcher, "http://localhost:8000")
+
+ 	delReq := httptest.NewRequest(http.MethodDelete, "/api/requests/req-to-delete", nil)
+	delRec := httptest.NewRecorder()
+	srv.Handler().ServeHTTP(delRec, delReq)
+
+	if delRec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d: %s", delRec.Code, delRec.Body.String())
+	}
+
+ 	req, _ := store.GetRequest(context.Background(), "req-to-delete")
+	if req != nil {
+		t.Fatalf("expected request to be deleted, but still found in store")
 	}
 }

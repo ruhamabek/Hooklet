@@ -270,3 +270,13 @@ func (s *SqliteStore) GetReplayAttempts(ctx context.Context, requestID string) (
 
 	return attempts, nil
 }
+
+func (s *SqliteStore) DeleteRequest(ctx context.Context, id string) error {
+	_, err := s.db.ExecContext(ctx, "DELETE FROM requests WHERE id = ?", id)
+	return err
+}
+
+func (s *SqliteStore) ClearRequests(ctx context.Context) error {
+	_, err := s.db.ExecContext(ctx, "DELETE FROM requests")
+	return err
+}

@@ -23,7 +23,7 @@ func main() {
 
  	db, err := store.NewSqliteStore(*dbPath)
 	if err != nil {
-		log.Fatalf("❌ Failed to open database at %s: %v", *dbPath, err)
+		log.Fatalf("[ERROR] Failed to open database at %s: %v", *dbPath, err)
 	}
 	defer db.Close()
 
@@ -33,17 +33,16 @@ func main() {
  	srv := server.New(db, broker, dispatcher, *target)
 
  	fmt.Println()
-	fmt.Println("  ⚡ Hooklet (v0.1) - Webhook Capture & Replay Engine")
-	fmt.Println("  ───────────────────────────────────────────────────")
-	fmt.Printf("  🌐 Dashboard:        http://localhost:%d/\n", *port)
-	fmt.Printf("  📥 Webhook Endpoint: http://localhost:%d/wh/*\n", *port)
-	fmt.Printf("  🎯 Default Target:   %s\n", *target)
-	fmt.Printf("  🗄️  Database:         %s\n", *dbPath)
-	fmt.Println("  ───────────────────────────────────────────────────")
-	fmt.Printf("  Ready! Send webhooks to http://localhost:%d/wh/<any-path>\n\n", *port)
+	fmt.Println("  Hooklet (v0.1) - Webhook Capture & Replay Engine")
+	fmt.Println("  ---------------------------------------------------")
+	fmt.Printf("  • Dashboard:        http://localhost:%d/\n", *port)
+	fmt.Printf("  • Ingress Listener: http://localhost:%d/wh/*\n", *port)
+	fmt.Printf("  • Forward Target:   %s\n", *target)
+	fmt.Printf("  • SQLite Database:  %s\n", *dbPath)
+	fmt.Println("  ---------------------------------------------------")
+	fmt.Printf("  Ready. Listening for incoming webhooks on :%d\n\n", *port)
 
-	// 6. Handle graceful shutdown (Ctrl+C)
-	stop := make(chan os.Signal, 1)
+ 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 
 	addr := fmt.Sprintf(":%d", *port)

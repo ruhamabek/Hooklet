@@ -44,13 +44,20 @@ func (s *SpyStore) SaveReplayAttempt(ctx context.Context, attempt *model.ReplayA
 func (s *SpyStore) GetReplayAttempts(ctx context.Context, requestID string)([]model.ReplayAttempt, error) {
 	return nil, nil
 }
+func (s *SpyStore) DeleteRequest(ctx context.Context, id string) error {
+	return nil
+}
+func (s *SpyStore) ClearRequests(ctx context.Context) error {
+	s.savedRequests = nil
+	return nil
+}
 
 
 func TestCaptureHandler_Success(t *testing.T){
 	spy := &SpyStore{}
 	broker := event.NewBroker()
 	ch := broker.Subscribe()
-	defer broker.Unsusbcribe(ch)
+	defer broker.Unsubscribe(ch)
 
 	handler := capture.NewHandler(spy, broker)
 

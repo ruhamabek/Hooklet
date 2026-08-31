@@ -1,0 +1,97 @@
+{{ define "simulate_modal" }}
+<div id="modal-simulate" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+  <div class="bg-canvas-900 border border-canvas-750 rounded-xl w-[700px] max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+    <div class="p-5 border-b border-canvas-800 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center text-white">
+          <i data-lucide="zap" class="w-3.5 h-3.5 fill-white"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h3 class="text-sm font-bold text-white">Simulate Incoming Webhook</h3>
+            <span class="text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-800 px-1.5 py-0.2 rounded font-mono">Instant Dispatch</span>
+          </div>
+          <p class="text-xs text-slate-400">Send preconfigured or custom test webhooks into your live capture stream</p>
+        </div>
+      </div>
+      <button onclick="closeSimulateModal()" class="text-slate-400 hover:text-white transition">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <div class="p-5 overflow-y-auto space-y-4 text-xs font-mono">
+      <div>
+        <span class="text-slate-400 font-sans font-medium uppercase text-[11px] block mb-2">SELECT PRESET TEMPLATE</span>
+        <div class="grid grid-cols-3 gap-2">
+          <button onclick="selectPreset('github_push')" id="preset-github_push" class="p-2.5 rounded-lg border border-blue-500 bg-blue-950/30 text-left transition flex flex-col gap-1">
+            <span class="font-bold text-white text-xs">GitHub: Push to main</span>
+            <span class="text-[10px] text-slate-400">Triggered when code is pushed to branch refs/heads/main</span>
+          </button>
+          <button onclick="selectPreset('github_pr')" id="preset-github_pr" class="p-2.5 rounded-lg border border-canvas-800 bg-canvas-950 text-left transition hover:border-canvas-700 flex flex-col gap-1">
+            <span class="font-bold text-white text-xs">GitHub: Pull Request</span>
+            <span class="text-[10px] text-slate-400">Pull request #42 opened with reviews requested</span>
+          </button>
+          <button onclick="selectPreset('stripe_payment')" id="preset-stripe_payment" class="p-2.5 rounded-lg border border-canvas-800 bg-canvas-950 text-left transition hover:border-canvas-700 flex flex-col gap-1">
+            <span class="font-bold text-white text-xs">Stripe: payment_intent</span>
+            <span class="text-[10px] text-slate-400">Successful customer checkout for $149.00 Enterprise plan</span>
+          </button>
+          <button onclick="selectPreset('shopify_order')" id="preset-shopify_order" class="p-2.5 rounded-lg border border-canvas-800 bg-canvas-950 text-left transition hover:border-canvas-700 flex flex-col gap-1">
+            <span class="font-bold text-white text-xs">Shopify: orders/create</span>
+            <span class="text-[10px] text-slate-400">New e-commerce order received with 2 items</span>
+          </button>
+          <button onclick="selectPreset('slack_action')" id="preset-slack_action" class="p-2.5 rounded-lg border border-canvas-800 bg-canvas-950 text-left transition hover:border-canvas-700 flex flex-col gap-1">
+            <span class="font-bold text-white text-xs">Slack: Block Action</span>
+            <span class="text-[10px] text-slate-400">User clicked "Approve Webhook Deployment" button</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-4 gap-3">
+        <div>
+          <label class="text-slate-400 font-sans block mb-1">HTTP Method</label>
+          <input type="text" id="sim-method" value="POST" class="w-full bg-canvas-950 border border-canvas-800 rounded px-2.5 py-1.5 text-emerald-400 font-bold" />
+        </div>
+        <div class="col-span-3">
+          <label class="text-slate-400 font-sans block mb-1">Ingress Path</label>
+          <input type="text" id="sim-path" value="/wh/github" class="w-full bg-canvas-950 border border-canvas-800 rounded px-2.5 py-1.5 text-slate-200" />
+        </div>
+      </div>
+
+      <div>
+        <div class="flex items-center justify-between mb-1">
+          <label class="text-slate-400 font-sans">Simulated Request Headers (JSON)</label>
+          <div class="bg-canvas-950 border border-canvas-800 rounded p-0.5 flex text-[10px]">
+            <button type="button" onclick="setSimHeadersMode('highlight')" id="sim-headers-mode-hl" class="px-2 py-0.5 rounded bg-blue-600 text-white font-medium">Highlighted</button>
+            <button type="button" onclick="setSimHeadersMode('edit')" id="sim-headers-mode-edit" class="px-2 py-0.5 rounded text-slate-400 hover:text-slate-200">Edit</button>
+          </div>
+        </div>
+        <pre id="sim-headers-preview" onclick="setSimHeadersMode('edit')" title="Click to edit raw JSON" class="bg-black border border-canvas-800 rounded p-2.5 font-mono text-xs overflow-auto h-24 leading-relaxed cursor-text"><code class="language-json"></code></pre>
+        <textarea id="sim-headers" rows="4" oninput="updateSimHeadersPreview()" class="hidden w-full bg-black border border-canvas-800 rounded p-2.5 text-slate-200 font-mono text-xs focus:outline-none focus:border-blue-500"></textarea>
+      </div>
+
+      <div>
+        <div class="flex items-center justify-between mb-1">
+          <label class="text-slate-400 font-sans">Webhook Payload (JSON)</label>
+          <div class="flex items-center gap-1.5">
+            <button type="button" onclick="formatSimPayload()" class="text-blue-400 hover:text-blue-300 transition text-[11px] font-sans">Format JSON</button>
+            <div class="bg-canvas-950 border border-canvas-800 rounded p-0.5 flex text-[10px]">
+              <button type="button" onclick="setSimPayloadMode('highlight')" id="sim-payload-mode-hl" class="px-2 py-0.5 rounded bg-blue-600 text-white font-medium">Highlighted</button>
+              <button type="button" onclick="setSimPayloadMode('edit')" id="sim-payload-mode-edit" class="px-2 py-0.5 rounded text-slate-400 hover:text-slate-200">Edit</button>
+            </div>
+          </div>
+        </div>
+        <pre id="sim-payload-preview" onclick="setSimPayloadMode('edit')" title="Click to edit raw JSON" class="bg-black border border-canvas-800 rounded p-3 font-mono text-xs overflow-auto h-44 leading-relaxed cursor-text"><code class="language-json"></code></pre>
+        <textarea id="sim-payload" rows="7" oninput="updateSimPayloadPreview()" class="hidden w-full bg-black border border-canvas-800 rounded p-3 text-slate-200 font-mono text-xs focus:outline-none focus:border-blue-500"></textarea>
+      </div>
+    </div>
+
+    <div class="p-4 border-t border-canvas-800 bg-canvas-950 flex items-center justify-between">
+      <button onclick="closeSimulateModal()" class="px-4 py-1.5 rounded border border-canvas-750 text-slate-400 hover:text-white transition text-xs font-sans">Cancel</button>
+      <button onclick="dispatchSimulatedWebhook()" class="px-4 py-1.5 rounded bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs font-sans transition flex items-center gap-1.5 shadow">
+        <i data-lucide="send" class="w-3.5 h-3.5"></i>
+        <span>Dispatch to Capture Stream</span>
+      </button>
+    </div>
+  </div>
+</div>
+{{ end }}

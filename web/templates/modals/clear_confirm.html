@@ -1,0 +1,31 @@
+{{ define "clear_confirm_modal" }}
+<div id="modal-clear-confirm" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+  <div class="bg-canvas-900 border border-canvas-750 rounded-xl w-[440px] flex flex-col shadow-2xl overflow-hidden">
+    <div class="p-5 flex items-start gap-4">
+      <div class="w-10 h-10 rounded-full bg-rose-950/80 border border-rose-800/80 flex items-center justify-center flex-shrink-0 text-rose-400 shadow-sm">
+        <i data-lucide="trash-2" class="w-5 h-5"></i>
+      </div>
+      <div class="flex-1">
+        <h3 class="text-sm font-bold text-white mb-1">Clear Captured Webhooks?</h3>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          This will permanently delete all captured webhooks and replay history from your local SQLite database. This action cannot be undone.
+        </p>
+        <div class="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-canvas-950 border border-canvas-800 text-[11px] font-mono text-rose-400">
+          <i data-lucide="alert-circle" class="w-3 h-3"></i>
+          <span id="clear-modal-count">0 webhooks will be deleted</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="p-3.5 border-t border-canvas-800 bg-canvas-950 flex items-center justify-end gap-2 text-xs">
+      <button type="button" onclick="closeClearModal()" class="px-3.5 py-1.5 rounded border border-canvas-750 text-slate-300 hover:text-white transition font-medium">
+        Cancel
+      </button>
+      <button type="button" id="btn-confirm-delete" onclick="executeClearRequests()" class="px-4 py-1.5 rounded bg-rose-600 hover:bg-rose-500 text-white font-medium transition flex items-center gap-1.5 shadow-sm shadow-rose-900/30">
+        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+        <span>Clear All History</span>
+      </button>
+    </div>
+  </div>
+</div>
+{{ end }}

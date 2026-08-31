@@ -39,7 +39,7 @@ func TestBroker_SubscribeAndPublish(t *testing.T){
 			t.Fatal("ch2 timed out waiting for event")
 	 }
 
-	 broker.Unsusbcribe(ch1)
+	 broker.Unsubscribe(ch1)
     
 	 req2 := &model.WebhookRequest{
 		ID:     "req-sse-2",

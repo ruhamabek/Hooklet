@@ -1,0 +1,41 @@
+{{ define "replays" }}
+<div id="bottom-replay-panel" class="h-64 border-t border-canvas-800 bg-canvas-900/90 flex flex-col flex-shrink-0 relative">
+  <div id="panel-resizer" class="absolute -top-1.5 left-0 right-0 h-3 cursor-row-resize flex items-center justify-center hover:bg-blue-500/40 active:bg-blue-500 transition-colors z-20 group">
+    <div class="w-12 h-1 rounded-full bg-canvas-750 group-hover:bg-blue-400 transition-colors"></div>
+  </div>
+
+  <div class="px-6 py-2 border-b border-canvas-800 flex items-center justify-between text-xs">
+    <div class="flex items-center gap-2 font-bold uppercase tracking-wider text-slate-300 text-[11px]">
+      <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 text-blue-400"></i>
+      <span>REPLAY HISTORY & TARGET RESPONSE</span>
+      <span id="replay-runs-count" class="px-1.5 py-0.2 rounded-full bg-canvas-800 text-slate-400 font-mono font-normal">0 runs</span>
+    </div>
+    <button onclick="triggerReplay()" class="hover:text-blue-400 text-slate-400 transition flex items-center gap-1 text-[11px]">
+      <i data-lucide="refresh-cw" class="w-3 h-3"></i>
+      <span>Replay Again</span>
+    </button>
+  </div>
+
+  <div class="flex-1 flex overflow-hidden">
+    <div class="w-96 border-r border-canvas-800 overflow-y-auto p-3 space-y-2" id="replay-runs-list">
+      <div class="text-slate-500 text-xs italic text-center py-8">No replays triggered yet. Click "REPLAY REQUEST" above.</div>
+    </div>
+
+    <div class="flex-1 flex flex-col overflow-hidden bg-canvas-950">
+      <div class="px-4 py-1.5 border-b border-canvas-800/80 flex items-center justify-between text-xs">
+        <div class="flex items-center gap-2">
+          <span class="text-slate-400 font-medium">Target Response:</span>
+          <div class="bg-canvas-900 border border-canvas-800 rounded p-0.5 flex text-[11px]">
+            <button class="px-2 py-0.5 rounded bg-blue-600 text-white font-medium">Response Body</button>
+          </div>
+        </div>
+        <button onclick="copyTargetResponse()" class="text-slate-400 hover:text-white transition flex items-center gap-1 text-[11px]" title="Copy response">
+          <i data-lucide="copy" class="w-3 h-3"></i>
+          <span>Copy</span>
+        </button>
+      </div>
+      <pre id="target-response-body" class="flex-1 p-4 font-mono text-xs text-slate-300 overflow-y-auto">Select a replay run on the left to view target server response.</pre>
+    </div>
+  </div>
+</div>
+{{ end }}

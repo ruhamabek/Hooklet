@@ -16,6 +16,8 @@ type Store interface {
 	ListRequests(ctx context.Context, limit int, offset int) ([]*model.WebhookRequest, error)
 	SaveReplayAttempt(ctx context.Context, attempt *model.ReplayAttempt) error
 	GetReplayAttempts(ctx context.Context, requestID string) ([]model.ReplayAttempt, error)
+	DeleteRequest(ctx context.Context, id string) error
+	ClearRequests(ctx context.Context) error
 }
 
  
